@@ -5,12 +5,6 @@ import Data.List.Split
 
 type Line = (Int, Int, Char, String)
 
-split2 :: String -> String -> Maybe (String, String)
-split2 needle haystack =
-    case splitOn needle haystack of
-        a:b:[] -> Just (a,b)
-        _ -> Nothing
-
 parseLine :: String -> Line
 parseLine lineString =
     let
@@ -22,15 +16,16 @@ parseLine lineString =
 countWhere :: (a -> Bool) -> [a] -> Int
 countWhere fn = length . filter fn
 
+run :: (Line -> Bool) -> [String] -> String
+run fn = show . countWhere (fn . parseLine)
+
+betwixt :: Int -> Int -> Int -> Bool
+betwixt lo hi n = n >= lo && n <= hi
+
 part1 :: [String] -> String
-part1 = show . countWhere (checkConstraint . parseLine)
-    where
-        checkConstraint (min, max, chr, rest) =
-            let n = countWhere (== chr) rest
-            in n >= min && n <= max
+part1 = run (\(min, max, pattern, rest) ->
+            betwixt min max $ countWhere (== pattern) rest)
 
 part2 :: [String] -> String
-part2 = show . countWhere (checkPositionsMatch . parseLine)
-    where
-        checkPositionsMatch (a, b, pattern, rest) =
-            (rest !! (a - 1) == pattern) /=  (rest !! (b - 1) == pattern)
+part2 = run (\(a, b, pattern, rest) ->
+            foldl1 (/=) $ (== pattern) . (!!) rest . pred <$> [a, b])
