@@ -1,16 +1,18 @@
 import System.IO
 import qualified Day1
+import qualified Day2
 
 
 main :: IO ()
-main = testDay1
+main = day2_2
 
-testDay1 = do
-    lines <- dayInput 1
-    runTest lines Day1.run
+day2_2 = runTest Day2.part2 "day2.txt"
+day2_1 = runTest Day2.part1 "day2.txt"
+day1_2 = runTest Day1.run "day1.txt"
 
-runTest :: [String] -> ([String] -> String) -> IO ()
-runTest lines fn = do
+runTest ::([String] -> String) -> String -> IO ()
+runTest fn inputFilename= do
+    lines <- dayInput inputFilename
     putStrLn ""
     putStrLn "-----"
     putStrLn $ fn $ lines
@@ -18,8 +20,9 @@ runTest lines fn = do
 
 rootDir = "/home/jephron/dev/personal/advent2020/test/"
 
-dayInput :: Int -> IO [String]
-dayInput d = lines <$> readFile (rootDir <> "day" <> show d <> ".txt")
+dayInput :: String -> IO [String]
+dayInput inputFilename
+    = lines <$> readFile (rootDir <> inputFilename)
 
 getLines :: Handle -> IO [String]
 getLines h = hGetContents h >>= return . lines
