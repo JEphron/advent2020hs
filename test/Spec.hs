@@ -8,6 +8,8 @@ main = day3_2
 
 day3_2 = runTest Day3.part2 "day3.txt"
 
+day3_1 = runTest Day3.part1 "day3.txt"
+
 day2_2 = runTest Day2.part2 "day2.txt"
 
 day2_1 = runTest Day2.part1 "day2.txt"
