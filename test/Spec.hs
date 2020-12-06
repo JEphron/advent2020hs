@@ -3,10 +3,15 @@ import qualified Day2
 import qualified Day3
 import qualified Day4
 import qualified Day5
+import qualified Day6
 import System.IO
 
 main :: IO ()
-main = day5_2
+main = day6_2
+
+day6_2 = runTest Day6.part2 "day6.txt"
+
+day6_1 = runTest Day6.part1 "day6.txt"
 
 day5_2 = runTest Day5.part2 "day5.txt"
 
