@@ -3,16 +3,19 @@
 module Day8 where
 
 import Control.Applicative
-import Control.Monad (when)
+import Control.Monad (void, when)
 import Control.Monad.State.Lazy (State)
 import qualified Control.Monad.State.Lazy as State
 import qualified Data.Char as Char
+import qualified Data.List as List
+import qualified Data.Maybe as Maybe
 import Data.Set (Set)
 import qualified Data.Set as Set
+import Debug.Trace
 import qualified Text.ParserCombinators.ReadP as ReadP
 import qualified Text.Read
 
-data OpCode = NoOp | Jmp Int | Acc Int deriving (Show)
+data OpCode = NoOp Int | Jmp Int | Acc Int deriving (Show, Eq)
 
 data ProgramState = ProgramState
   { acc :: Int,
@@ -25,7 +28,7 @@ instance Read OpCode where
   readPrec =
     Text.Read.lift $
       ReadP.choice
-        [ (const NoOp) <$> parseOpCode "nop",
+        [ NoOp <$> parseOpCode "nop",
           Jmp <$> parseOpCode "jmp",
           Acc <$> parseOpCode "acc"
         ]
@@ -49,19 +52,73 @@ initProgramState =
     }
 
 part1 :: [String] -> String
-part1 s = show $ acc $ State.execState (runCode $ map read s) initProgramState
+part1 s = show $ acc $ snd $ runIt (map read s)
 
-runCode :: [OpCode] -> State ProgramState ()
-runCode program = do
+runIt :: [OpCode] -> (Bool, ProgramState)
+runIt it = State.runState (runProgram it) initProgramState
+
+part2 :: [String] -> String
+part2 s =
+  let showThing (completed, ProgramState {acc, instruction}) =
+        show completed ++ " " ++ show acc ++ " " ++ show instruction
+   in unlines $ map showThing $ map runIt $ generateProgramVariants $ take 1000 $ map read s
+
+generateProgramVariants :: [OpCode] -> [[OpCode]]
+generateProgramVariants initialProgram =
+  let swapOp op =
+        case op of
+          NoOp n -> Jmp n
+          Jmp n -> NoOp n
+          x -> x
+
+      makeVariant :: [OpCode] -> Int -> Maybe [OpCode]
+      makeVariant program index =
+        let variant = applyAt index swapOp program
+         in if variant == program then Nothing else Just variant
+
+      pairs :: [([OpCode], Int)]
+      pairs = zip (repeat $ initialProgram) [0 .. length initialProgram]
+   in Maybe.mapMaybe (uncurry makeVariant) pairs
+
+runProgram :: [OpCode] -> State ProgramState Bool
+runProgram program = do
   ProgramState {acc, instruction, visited} <- State.get
-  when (Set.notMember instruction visited) $ do
+
+  let programSuccess = instruction > length program
+  let endOfProgram = Set.member instruction visited || programSuccess
+
+  when (not endOfProgram) $ do
     let visited' = Set.insert instruction visited
-    State.put $
+    case runOp program instruction acc visited' of
+      -- screw it
+      Nothing -> error (show (traceShowId acc))
+      Just newState -> State.put newState
+    void $ runProgram program
+
+  return programSuccess
+
+listSetAt :: Int -> a -> [a] -> [a]
+listSetAt i value list =
+  applyAt i (const value) list
+
+applyAt :: Int -> (a -> a) -> [a] -> [a]
+applyAt i fn list =
+  if i > length list || i < 0
+    then list
+    else case List.splitAt i list of
+      (a, b : bs) ->
+        a ++ [fn b] ++ bs
+      _ ->
+        list
+
+runOp program instruction acc visited' =
+  if instruction >= length program
+    then Nothing
+    else Just $
       case program !! instruction of
-        NoOp ->
+        NoOp _ ->
           ProgramState acc (instruction + 1) visited'
         Acc n ->
           ProgramState (acc + n) (instruction + 1) visited'
         Jmp n ->
           ProgramState acc (instruction + n) visited'
-    runCode program
