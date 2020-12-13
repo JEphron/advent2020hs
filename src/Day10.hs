@@ -1,8 +1,7 @@
 module Day10 where
 
-import Control.Monad.State
 import Data.List
-import Data.Map (Map, (!?))
+import Data.Map ((!?))
 import qualified Data.Map as Map
 
 part1 :: [String] -> String
@@ -31,16 +30,15 @@ fuck m x =
           Nothing ->
             let (a, b) = fuck mm x
              in (Map.insert x b a, b : ns)
-   in sum <$> foldr guh (m, []) (getValidChoices x)
 
-{- requires sorted input list -}
-getValidChoices :: [Int] -> [[Int]]
-getValidChoices [] = []
-getValidChoices ints =
-  tail $
-    takeWhile (\x -> head x - head ints <= 3) $
-      filter (not . null) $
-        tails ints
+      lt3 y =
+        head y - head x <= 3
+
+      choices =
+        if null x
+          then []
+          else tail $ takeWhile lt3 $ filter (not . null) $ tails x
+   in sum <$> foldr guh (m, []) choices
 
 -- utils --
 
