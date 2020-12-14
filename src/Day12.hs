@@ -11,6 +11,8 @@ type Angle = Int
 data Ship = Ship
   { lat :: Int,
     lng :: Int,
+    wlat :: Int,
+    wlng :: Int,
     dir :: Angle
   }
   deriving (Show)
@@ -45,30 +47,34 @@ instance Read Cmd where
 
 part1 :: [String] -> String
 part1 ss =
-  let initial = Ship {lat = 0, lng = 0, dir = 0}
+  let initial = Ship {lat = 0, lng = 0, wlat = 1, wlng = 10, dir = 0}
       cmds = map read ss :: [Cmd]
    in unlines $
         map (\(s, c) -> show (s, c, manhattan s)) $
           zip (drop 1 $ scanl updateShip initial cmds) cmds
 
 manhattan :: Ship -> Int
-manhattan (Ship {lat, lng}) = abs lat + abs lng
+manhattan (Ship {lat, lng}) =
+  abs lat + abs lng
 
-angleClamp n = if n >= 360 then n - 360 else if n < 0 then n + 360 else n
+angleClamp n =
+  if n >= 360 then n - 360 else if n < 0 then n + 360 else n
 
 updateShip :: Ship -> Cmd -> Ship
-updateShip ship@(Ship {lat, lng, dir}) cmd =
+updateShip ship@(Ship {lat, lng, wlat, wlng, dir}) cmd =
   case cmd of
-    North n -> ship {lat = lat + n}
-    South n -> ship {lat = lat - n}
-    East n -> ship {lng = lng + n}
-    West n -> ship {lng = lng - n}
-    RotLeft n -> ship {dir = angleClamp (dir + n)}
-    RotRight n -> ship {dir = angleClamp (dir - n)}
-    Forward n ->
-      case dir of
-        0 -> ship {lng = lng + n}
-        90 -> ship {lat = lat + n}
-        180 -> ship {lng = lng - n}
-        270 -> ship {lat = lat - n}
-        _ -> error (show dir)
+    North n -> ship {wlat = wlat + n}
+    South n -> ship {wlat = wlat - n}
+    East n -> ship {wlng = wlng + n}
+    West n -> ship {wlng = wlng - n}
+    RotLeft n -> rotate ship rot90 n
+    RotRight n -> rotate ship rot90cc n
+    Forward n -> ship {lat = lat + wlat * n, lng = lng + wlng * n}
+
+rotate ship@(Ship {wlat, wlng}) fn n =
+  let (wlat', wlng') = iterate fn (wlat, wlng) !! (n `div` 90)
+   in ship {wlng = wlng', wlat = wlat'}
+
+rot90 (x, y) = (y, - x)
+
+rot90cc (x, y) = (- y, x)
