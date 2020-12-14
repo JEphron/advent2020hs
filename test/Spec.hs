@@ -2,6 +2,7 @@ import qualified Day1
 import qualified Day10
 import qualified Day11
 import qualified Day12
+import qualified Day13
 import qualified Day2
 import qualified Day3
 import qualified Day4
@@ -13,7 +14,9 @@ import qualified Day9
 import System.IO
 
 main :: IO ()
-main = day12_1
+main = day13_1
+
+day13_1 = runTest Day13.part1 "day13.txt"
 
 day12_1 = runTest Day12.part1 "day12.txt"
 
