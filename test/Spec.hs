@@ -14,7 +14,9 @@ import qualified Day9
 import System.IO
 
 main :: IO ()
-main = day13_1
+main = day13_2
+
+day13_2 = runTest Day13.part2 "day13.txt"
 
 day13_1 = runTest Day13.part1 "day13.txt"
 
@@ -60,12 +62,12 @@ day2_1 = runTest Day2.part1 "day2.txt"
 
 day1_2 = runTest Day1.run "day1.txt"
 
-runTest :: ([String] -> String) -> String -> IO ()
+runTest :: Show a => ([String] -> a) -> String -> IO ()
 runTest fn inputFilename = do
   lines <- dayInput inputFilename
   putStrLn ""
   putStrLn "-----"
-  putStrLn $ fn $ lines
+  putStrLn $ show $ fn $ lines
   putStrLn "-----"
 
 rootDir = "/home/jephron/dev/personal/advent2020/test/"
